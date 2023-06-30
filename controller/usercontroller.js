@@ -1,17 +1,22 @@
-const Employee = require("../models/user")
+const employee = require("../models/user")
 exports.adduser = async (req, res) => {
     try {
         const reqData = req.body;
-        console.log("reqData", reqData);
-        const data = await Employee.create(reqData)
-        return res.status(200).json({ status: true, data: reqData, message: "Data insrted succssefully" })
+        const userData = await employee.findOne({ $or: [{ fname: reqData.fname }, { email: reqData.email }] }, { fname: 1, email: 1 })
+        if (!userData) {
+            const data = await employee.create(reqData)
+            return res.status(200).json({ status: true, data: reqData, message: "Data insrted succssefully" })
+        } else {
+            return res.status(400).json({ status: false, data: "", message: "User already exists" })
+
+        }
     } catch (error) {
-        console.log('error', error);
+        console.log('error123', error);
     }
 }
 exports.getuser = async (req, res) => {
     try {
-        const data = await Employee.find()
+        const data = await employee.find()
         return res.status(200).json({ status: true, data: data, message: "Data fetch succssefully" })
     } catch (error) {
         console.log('error', error);
@@ -21,11 +26,21 @@ exports.updateUser = async (req, res) => {
     try {
         const { id } = req.params
         const reqData = req.body
-        const data = await Employee.findOneAndUpdate(
-            { "_id": id },
-            { "name": reqData.name, "email": reqData.email }
-        )
-        return res.status(200).json({ status: true, data: reqData, message: "Data updated succssefully" })
+        console.log('id', id);
+        const userData = await employee.findOne({ _id: { $nin: id }, $or: [{ fname: reqData.fname }, { email: reqData.email }] })
+        // , { $or: [{ fname: reqData.fname }, { email: reqData.email }] }, { fname: 1, email: 1 }
+
+        console.log("userdara", userData);
+        if (!userData) {
+            const data = await employee.findOneAndUpdate(
+                { "_id": id },
+                { "fname": reqData.fname, "lname": reqData.lname, "address": reqData.address, "email": reqData.email }
+            )
+            return res.status(200).json({ status: true, data: reqData, message: "Data updated succssefully" })
+        } else {
+            return res.status(400).json({ status: false, data: "", message: "User already exists" })
+        }
+
     } catch (error) {
         console.log('error', error);
     }
@@ -33,7 +48,7 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const { id } = req.params
-        const data = await Employee.deleteOne({ "_id": id });
+        const data = await employee.deleteOne({ "_id": id });
         return res.status(200).json({ status: true, data: data, message: "Data delete succssefully" })
     } catch (error) {
         console.log('error', error);

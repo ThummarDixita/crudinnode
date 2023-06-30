@@ -11,7 +11,6 @@ module.exports = function (validator) {
             req.body = validate
             next()
         } catch (error) {
-            console.log('error0', error);
             error.statusCode = 422
             next(error)
         }
